@@ -1,0 +1,653 @@
+
+/* ---------- Global styles ---------- */
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #101116;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f5f6f9;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* ---------- Main container ---------- */
+
+.app-shell {
+  width: calc(100% - 48px);
+  max-width: 1800px;
+  min-height: calc(100vh - 44px);
+  margin: 22px auto;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #edf0f4;
+  border-radius: 20px;
+  box-shadow: 0 5px 28px rgba(28, 35, 54, 0.1);
+}
+
+/* ---------- Header ---------- */
+
+.topbar {
+  min-height: 76px;
+  padding: 12px 40px 12px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #e7e8ec;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #08080a;
+  text-decoration: none;
+  font-size: clamp(24px, 2vw, 30px);
+  font-weight: 850;
+  letter-spacing: -1.5px;
+  flex-shrink: 0;
+}
+
+.brand-note {
+  color: #08080a;
+  font-size: 42px;
+  line-height: 1;
+  text-shadow: -3px 1px #25f4ee, 3px -1px #fe2c55;
+}
+
+.topbar-signup {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  font-size: 14px;
+}
+
+.signup-button,
+.login-button {
+  color: #fff;
+  background: #fe174d;
+  border: none;
+  font-weight: 650;
+  transition: background 0.2s ease;
+}
+
+.signup-button {
+  min-width: 134px;
+  padding: 13px 22px;
+  border-radius: 11px;
+}
+
+.signup-button:hover,
+.login-button:hover {
+  background: #e90d43;
+}
+
+/* ---------- Main two-column layout ---------- */
+
+.login-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 45%) minmax(0, 55%);
+  min-height: min(850px, calc(100vh - 144px));
+}
+
+/* ---------- Login panel ---------- */
+
+.login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: clamp(28px, 4vw, 60px);
+  background: #fff;
+}
+
+.login-content {
+  width: 100%;
+  max-width: 412px;
+  min-width: 0;
+  text-align: center;
+}
+
+.login-content h1 {
+  margin: 0 0 10px;
+  font-size: clamp(27px, 3vw, 44px);
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -1.4px;
+  overflow-wrap: anywhere;
+}
+
+.subtitle {
+  margin: 0 0 30px;
+  color: #747785;
+  font-size: clamp(15px, 1.5vw, 20px);
+  line-height: 1.45;
+}
+
+/* ---------- Social buttons ---------- */
+
+.social-options {
+  display: grid;
+  gap: 12px;
+}
+
+.social-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 53px;
+  padding: 12px 38px;
+  color: #17171c;
+  background: #fff;
+  border: 1px solid #dfe2e9;
+  border-radius: 11px;
+  font-size: clamp(12px, 1.15vw, 15px);
+  font-weight: 600;
+  text-align: center;
+}
+
+.social-button:hover {
+  background: #f8f8fa;
+  border-color: #bfc3cc;
+}
+
+.social-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 25px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.user-icon {
+  color: #101117;
+  font-size: 21px;
+}
+
+.google-icon {
+  color: #4285f4;
+  font-family: Arial, sans-serif;
+}
+
+.apple-icon {
+  color: #08080a;
+}
+
+.facebook-icon {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  color: #fff;
+  background: #1877f2;
+  font-size: 24px;
+  line-height: 29px;
+}
+
+/* ---------- OR separator ---------- */
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 21px 0;
+}
+
+.divider > span:first-child,
+.divider > span:last-child {
+  height: 1px;
+  flex: 1;
+  background: #e0e3e9;
+}
+
+.or-text {
+  color: #85899a;
+  font-size: 13px;
+}
+
+/* ---------- Login form ---------- */
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  width: 100%;
+}
+
+.login-form > input,
+.password-wrap input {
+  width: 100%;
+  min-width: 0;
+  height: 50px;
+  padding: 0 16px;
+  color: #17171c;
+  background: #f5f6f9;
+  border: 1px solid #e8eaf0;
+  border-radius: 11px;
+  outline: none;
+  font-size: 14px;
+}
+
+.login-form input::placeholder {
+  color: #858999;
+}
+
+.login-form input:focus {
+  border-color: #a8abb7;
+  background: #fff;
+}
+
+.password-wrap {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.password-wrap input {
+  padding-right: 65px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 5px;
+  color: #646979;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+}
+
+.login-button {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 5px;
+  padding: 12px;
+  border-radius: 11px;
+  font-size: 15px;
+}
+
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.form-message {
+  margin: 0;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.form-message.error {
+  color: #d92140;
+}
+
+.form-message.success {
+  color: #15803d;
+}
+
+/* ---------- Footer links ---------- */
+
+.forgot-link {
+  display: inline-block;
+  align-self: center;
+  margin-top: 3px;
+  padding: 0;
+  color: #1769ff;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+}
+
+.bottom-signup {
+  margin: clamp(28px, 4vw, 46px) 0 0;
+  color: #626575;
+  font-size: 14px;
+}
+
+.bottom-signup button {
+  padding: 0;
+  color: #fe174d;
+  background: transparent;
+  border: none;
+  font-weight: 600;
+}
+
+/* ---------- Profile after login ---------- */
+
+.profile {
+  margin: 24px 0;
+  padding: 16px;
+  border-radius: 10px;
+  background: #f8fafc;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.token-status {
+  color: #15803d;
+  font-size: 13px;
+}
+
+/* ---------- Image collage ---------- */
+
+.collage-panel {
+  position: relative;
+  min-width: 0;
+  min-height: 620px;
+  overflow: hidden;
+  background: #050506;
+}
+
+.collage-grid {
+  position: absolute;
+  inset: -5%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  transform: rotate(-5deg) scale(1.08);
+}
+
+.collage-tile {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 5px solid #050506;
+  border-radius: 18px;
+  background: #17171c;
+}
+
+.collage-tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tile-1 { transform: translateY(12%); }
+.tile-2 { transform: translateY(-5%); }
+.tile-3 { transform: translateY(8%); }
+.tile-4 { transform: translateY(-5%); }
+.tile-5 { transform: translateY(4%); }
+.tile-6 { transform: translateY(-7%); }
+.tile-7 { transform: translateY(-8%); }
+.tile-8 { transform: translateY(7%); }
+.tile-9 { transform: translateY(-6%); }
+
+/* ---------- Medium desktops and laptops ---------- */
+
+@media (max-width: 1100px) {
+  .app-shell {
+    width: calc(100% - 28px);
+    margin: 14px auto;
+  }
+
+  .login-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  }
+
+  .topbar {
+    padding-inline: 24px;
+  }
+
+  .login-panel {
+    padding: 32px 24px;
+  }
+
+  .collage-panel {
+    min-height: 600px;
+  }
+
+  .social-button {
+    gap: 6px;
+    min-height: 50px;
+  }
+}
+
+/* ---------- Tablets ---------- */
+
+@media (max-width: 800px) {
+  .login-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+  }
+
+  .login-panel {
+    padding: 28px 20px;
+  }
+
+  .login-content h1 {
+    font-size: clamp(27px, 4vw, 34px);
+    letter-spacing: -0.8px;
+  }
+
+  .subtitle {
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+
+  .social-options {
+    gap: 10px;
+  }
+
+  .social-button {
+    padding-inline: 34px;
+    font-size: 12px;
+  }
+
+  .social-icon {
+    left: 10px;
+  }
+
+  .collage-panel {
+    min-height: 550px;
+  }
+
+  .collage-grid {
+    gap: 8px;
+  }
+
+  .collage-tile {
+    border-width: 4px;
+    border-radius: 12px;
+  }
+
+  .topbar-signup {
+    gap: 12px;
+  }
+
+  .signup-button {
+    min-width: 100px;
+    padding: 11px 16px;
+  }
+}
+
+/* ---------- Mobile phones ---------- */
+
+@media (max-width: 600px) {
+  body {
+    background: #fff;
+  }
+
+  .app-shell {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .topbar {
+    min-height: 68px;
+    padding: 10px 18px;
+  }
+
+  .brand {
+    gap: 5px;
+    font-size: 25px;
+  }
+
+  .brand-note {
+    font-size: 35px;
+  }
+
+  .topbar-signup {
+    gap: 0;
+  }
+
+  .topbar-signup > span {
+    display: none;
+  }
+
+  .signup-button {
+    min-width: auto;
+    padding: 10px 17px;
+    font-size: 13px;
+  }
+
+  .login-layout {
+    display: block;
+    min-height: calc(100vh - 68px);
+  }
+
+  .login-panel {
+    min-height: calc(100vh - 68px);
+    padding: 38px 24px;
+  }
+
+  .login-content {
+    max-width: 420px;
+  }
+
+  .login-content h1 {
+    font-size: clamp(28px, 7vw, 34px);
+    letter-spacing: -0.9px;
+  }
+
+  .subtitle {
+    font-size: 15px;
+    margin-bottom: 26px;
+  }
+
+  .social-button {
+    min-height: 50px;
+    font-size: 14px;
+    padding-inline: 42px;
+  }
+
+  .social-icon {
+    left: 14px;
+  }
+
+  .login-form > input,
+  .password-wrap input {
+    height: 50px;
+    font-size: 14px;
+  }
+
+  .bottom-signup {
+    margin-top: 34px;
+  }
+
+  .collage-panel {
+    display: none;
+  }
+}
+
+/* ---------- Small phones ---------- */
+
+@media (max-width: 360px) {
+  .topbar {
+    padding-inline: 12px;
+  }
+
+  .brand {
+    font-size: 22px;
+  }
+
+  .brand-note {
+    font-size: 32px;
+  }
+
+  .signup-button {
+    padding: 9px 13px;
+  }
+
+  .login-panel {
+    padding: 30px 16px;
+  }
+
+  .login-content h1 {
+    font-size: 27px;
+  }
+
+  .social-button {
+    padding-inline: 35px;
+    font-size: 12px;
+  }
+
+  .social-icon {
+    left: 9px;
+  }
+
+  .bottom-signup {
+    font-size: 13px;
+  }
+}
+
+/* ---------- Short screens in landscape ---------- */
+
+@media (max-height: 650px) and (min-width: 601px) {
+  .login-panel {
+    align-items: flex-start;
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+
+  .login-layout {
+    min-height: auto;
+  }
+
+  .collage-panel {
+    min-height: 580px;
+  }
+
+  .bottom-signup {
+    margin-top: 24px;
+  }
+}
