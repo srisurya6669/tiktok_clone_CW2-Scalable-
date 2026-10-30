@@ -1,4 +1,5 @@
 import { useState } from "react";
+import CameraRecorder from "./CameraRecorder";
 
 const API_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -6,8 +7,15 @@ const API_URL =
 function UploadModal({ token, onClose, onUploaded }) {
   const [title, setTitle] = useState("");
   const [file, setFile] = useState(null);
+  const [mode, setMode] = useState("file"); // "file" | "record"
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  function switchMode(next) {
+    setMode(next);
+    setFile(null);
+    setMessage("");
+  }
 
   async function handleUpload(event) {
     event.preventDefault();
@@ -55,6 +63,29 @@ function UploadModal({ token, onClose, onUploaded }) {
       >
         <h2>Upload video</h2>
 
+        <div className="upload-tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "file"}
+            className={mode === "file" ? "active" : ""}
+            onClick={() => switchMode("file")}
+            disabled={loading}
+          >
+            Upload file
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === "record"}
+            className={mode === "record" ? "active" : ""}
+            onClick={() => switchMode("record")}
+            disabled={loading}
+          >
+            Record (30s)
+          </button>
+        </div>
+
         <form className="login-form" onSubmit={handleUpload}>
           <input
             type="text"
@@ -64,12 +95,16 @@ function UploadModal({ token, onClose, onUploaded }) {
             maxLength={100}
           />
 
-          <input
-            type="file"
-            accept="video/mp4,video/webm,video/quicktime"
-            onChange={(event) => setFile(event.target.files[0] || null)}
-            required
-          />
+          {mode === "file" ? (
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              onChange={(event) => setFile(event.target.files[0] || null)}
+              required
+            />
+          ) : (
+            <CameraRecorder onRecorded={setFile} />
+          )}
 
           {message && (
             <p className="form-message error" role="status">

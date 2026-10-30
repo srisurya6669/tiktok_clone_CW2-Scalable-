@@ -1,11 +1,14 @@
+import { Link, useNavigate } from "react-router-dom";
 
-function Header({ isSignUp, onSignUp, onLogin }) {
+function Header({ isSignUp }) {
+  const navigate = useNavigate();
+
   return (
     <header className="topbar">
-      <a className="brand" href="/" aria-label="TikTok home">
+      <Link className="brand" to="/" aria-label="ScaleTok home">
         <span className="brand-note">♪</span>
         <span>ScaleTok</span>
-      </a>
+      </Link>
 
       <div className="topbar-signup">
         <span>
@@ -13,7 +16,7 @@ function Header({ isSignUp, onSignUp, onLogin }) {
         </span>
         <button
           className="signup-button"
-          onClick={isSignUp ? onLogin : onSignUp}
+          onClick={() => navigate(isSignUp ? "/login" : "/signup")}
         >
           {isSignUp ? "Log in" : "Sign up"}
         </button>

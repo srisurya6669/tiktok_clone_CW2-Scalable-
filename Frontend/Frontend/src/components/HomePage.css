@@ -1,69 +1,248 @@
-.home-feed {
-  padding: 32px 48px 48px;
+.home-shell {
+  /* Matches the outer margin the .app-shell has at each breakpoint. */
+  --shell-gap: 44px;
+  /* The left sidebar and the comments column share this width. */
+  --side-width: 380px;
+  /* Width of the video column: a 5:8 frame as tall as the feed. */
+  --video-w: min(calc((100vh - var(--shell-gap) - 78px) * 5 / 8), 40vw);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--shell-gap));
+  /* Phones: dynamic viewport height excludes the collapsing browser bars. */
+  height: calc(100dvh - var(--shell-gap));
 }
 
-.home-title {
-  margin: 0 0 24px;
-  font-size: clamp(24px, 2.4vw, 34px);
-  letter-spacing: -1px;
+@media (max-width: 1100px) {
+  .home-shell {
+    --shell-gap: 28px;
+  }
 }
 
-.video-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 24px;
+@media (max-width: 600px) {
+  .home-shell {
+    --shell-gap: 0px;
+  }
 }
 
-.video-card {
-  overflow: hidden;
+/* App.css gives .app-shell a 100vh min-height, which on phones is taller than
+   the visible area and pushes the bottom of the video off screen. */
+.app-shell.home-shell {
+  min-height: 0;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.left-sidebar {
+  flex: 0 0 var(--side-width);
   background: #fff;
-  border: 1px solid #e7e8ec;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(28, 35, 54, 0.06);
+  border-right: 1px solid #e7e8ec;
 }
 
-.video-card video {
+.app-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Narrower side columns on smaller laptops so the video keeps its room. */
+@media (max-width: 1400px) {
+  .home-shell {
+    --side-width: 320px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .left-sidebar {
+    display: none;
+  }
+}
+
+.home-feed {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  background: #f5f6f9;
+}
+
+.video-slide {
+  position: relative;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--side-width);
+  overflow: hidden;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Middle column: the player is centred between the sidebar and comments. */
+.video-frame {
+  display: flex;
+  flex: 1 1 0;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.video-player {
+  position: relative;
+  /* Sized to a 5:8 frame so the video fills it with no bars. */
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 5 / 8;
+  overflow: hidden;
+  background: #e8eaf0;
+  border-radius: 20px;
+}
+
+.video-player video {
   display: block;
   width: 100%;
-  aspect-ratio: 9 / 16;
+  height: 100%;
   object-fit: cover;
-  background: #08080a;
 }
 
+.video-player video {
+  cursor: pointer;
+}
+
+/* Landscape videos are shown whole instead of being cropped. */
+.video-player video.fit-contain {
+  object-fit: contain;
+}
+
+.play-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  padding-left: 4px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Title and author sit on a soft gradient at the bottom of the video. */
 .video-info {
-  padding: 12px 16px 16px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  padding: 48px 80px 16px 16px;
+  color: #fff;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  pointer-events: none;
+}
+
+.video-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+}
+
+.video-progress > div {
+  height: 100%;
+  background: #9ca0a8;
+  transition: width 0.25s linear;
 }
 
 .video-info h2 {
   margin: 0 0 4px;
-  font-size: 16px;
+  font-size: 17px;
 }
 
 .video-info p {
   margin: 0;
-  color: #6b6f7b;
   font-size: 14px;
+  opacity: 0.85;
 }
 
-@media (max-width: 640px) {
-  .home-feed {
-    padding: 20px 16px 32px;
-  }
+.feed-sentinel {
+  height: 1px;
+}
+
+.home-empty {
+  margin: 0;
+  padding: 48px 24px;
+  text-align: center;
+  color: #6b6f7b;
 }
 
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
 }
 
-.upload-button {
-  padding: 9px 18px;
+/* Avatar + name: opens the profile. */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 12px 0 4px;
+  color: #17171c;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.topbar-user:hover,
+.topbar-user.active {
+  background: #f1f2f6;
+}
+
+.topbar-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
   color: #fff;
-  background: #fe2c55;
-  border: 0;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #fe174d, #ff6a88);
+  border-radius: 50%;
+  font-size: 15px;
   font-weight: 700;
+}
+
+.topbar-username {
+  max-width: 140px;
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .home-shell .brand > span:last-child {
+    display: none;
+  }
+
+  .topbar-actions {
+    gap: 6px;
+  }
 }
 
 .modal-backdrop {
@@ -80,9 +259,13 @@
 .modal {
   width: 100%;
   max-width: 420px;
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow-y: auto;
   padding: 28px;
   background: #fff;
-  border-radius: 16px;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(8, 8, 10, 0.3);
 }
 
 .modal h2 {
@@ -90,9 +273,392 @@
 }
 
 .modal-cancel {
-  padding: 12px;
-  color: #101116;
-  background: #f1f1f2;
+  width: 100%;
+  min-height: 48px;
+  color: #17171c;
+  background: #f1f2f6;
+  border: 0;
+  border-radius: 11px;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.modal-cancel:hover {
+  background: #e4e6ec;
+}
+
+
+.delete-button {
+  height: 34px;
+  padding: 0 14px;
+  color: #d92d20;
+  background: #fff;
+  border: 1px solid #f3c6c2;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.delete-button:hover {
+  background: #fef3f2;
+}
+
+/* ---------- Like / comment buttons ---------- */
+
+.video-actions {
+  position: absolute;
+  right: 12px;
+  bottom: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.action-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 56px;
+  padding: 4px 0;
+  color: #fff;
+  background: none;
+  border: 0;
+  font-size: 13px;
+  font-weight: 600;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
+  transition: transform 0.15s ease;
+}
+
+.action-button:hover {
+  transform: scale(1.08);
+}
+
+.action-button:active {
+  transform: scale(0.92);
+}
+
+.mute-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-button.liked {
+  color: #ff3040;
+}
+
+.action-button.liked svg {
+  animation: like-pop 0.3s ease;
+}
+
+@keyframes like-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- Comments panel (right side) ---------- */
+
+.comments-wrap {
+  min-width: 0;
+  height: 100%;
+  background: #fff;
+  border-left: 1px solid #e7e8ec;
+}
+
+.comments-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.comments-title {
+  margin: 0;
+  padding: 18px 20px;
+  font-size: 17px;
+  border-bottom: 1px solid #e7e8ec;
+}
+
+.comments-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 8px 20px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.comment {
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f1f2;
+}
+
+.comment-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.comment-head time {
+  color: #6b6f7b;
+}
+
+.comment p {
+  margin: 4px 0 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.comment-delete,
+.comments-more {
+  margin-top: 6px;
+  padding: 0;
+  color: #6b6f7b;
+  background: none;
+  border: 0;
+  font-size: 12px;
+}
+
+.comments-more {
+  display: block;
+  margin: 12px auto;
+  font-size: 13px;
+}
+
+.comments-empty {
+  padding: 24px 0;
+  color: #6b6f7b;
+  text-align: center;
+}
+
+.comments-panel .form-message {
+  margin: 0 20px 8px;
+}
+
+.comment-form {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid #e7e8ec;
+}
+
+.comment-form input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 14px;
+  background: #f5f6f9;
+  border: 1px solid #e8eaf0;
+  border-radius: 10px;
+  outline: none;
+}
+
+.comment-form input:focus {
+  background: #fff;
+  border-color: #a8abb7;
+}
+
+.comment-form button {
+  height: 40px;
+  padding: 0 18px;
+  color: #fff;
+  background: #fe174d;
+  border: 0;
+  border-radius: 10px;
+  font-weight: 650;
+}
+
+.comment-form button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Small screens: comments slide over the video when toggled. */
+@media (max-width: 600px) {
+  .comments-wrap {
+    display: none;
+    position: absolute;
+    inset: 20% 0 0;
+    z-index: 5;
+    border-radius: 16px 16px 0 0;
+    border-left: 0;
+  }
+
+  .comments-wrap.open {
+    display: block;
+  }
+}
+
+@media (min-width: 601px) {
+  .comments-toggle {
+    pointer-events: none;
+  }
+}
+
+/*
+  Feed page on wide screens: the video keeps its own size in the middle and
+  the left sidebar and the comments column share all the space beside it.
+*/
+@media (min-width: 1025px) {
+  .app-body.is-feed {
+    display: grid;
+    grid-template-columns:
+      minmax(0, 1fr) var(--video-w) minmax(0, 1fr);
+  }
+
+  .app-body.is-feed .app-content {
+    grid-column: 2 / 4;
+  }
+
+  .app-body.is-feed .video-slide {
+    grid-template-columns: var(--video-w) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .video-slide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Responsive ---------- */
+
+.comments-close {
+  display: none;
+}
+
+/* Tablets and below: hide the user name so the top bar never overflows. */
+@media (max-width: 800px) {
+  .topbar-username {
+    display: none;
+  }
+
+  .topbar-user {
+    padding: 0 4px;
+  }
+}
+
+@media (max-width: 600px) {
+  .comments-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: #17171c;
+    background: #f1f2f6;
+    border: 0;
+    border-radius: 50%;
+  }
+
+  .comments-title {
+    padding-right: 60px;
+  }
+
+  .comment-form {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Phones: video goes edge to edge with no rounded corners. */
+@media (max-width: 600px) {
+  .video-player {
+    border-radius: 0;
+  }
+
+  .video-info {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .video-actions {
+    right: 8px;
+    bottom: calc(100px + env(safe-area-inset-bottom));
+  }
+
+  .modal {
+    padding: 22px 18px;
+  }
+}
+
+/* Tablets: no left sidebar; the comments column is always visible. */
+@media (max-width: 1024px) {
+  .home-shell {
+    --side-width: clamp(250px, 36vw, 340px);
+  }
+}
+
+/* ---------- Upload dialog: file / camera tabs and recorder ---------- */
+
+.upload-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 4px;
+  background: #f1f2f6;
+  border-radius: 11px;
+}
+
+.upload-tabs button {
+  flex: 1;
+  height: 36px;
+  color: #6b6f7b;
+  background: transparent;
   border: 0;
   border-radius: 8px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.upload-tabs button.active {
+  color: #17171c;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(28, 35, 54, 0.12);
+}
+
+.recorder {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.recorder-screen {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  border-radius: 14px;
+}
+
+.recorder-screen video {
+  display: block;
+  width: 100%;
+  max-height: 46vh;
+  object-fit: cover;
+  aspect-ratio: 9 / 12;
+}
+
+/* Mirror the live preview like a selfie camera (the saved video is not mirrored). */
+.recorder-screen video.recorder-live {
+  transform: scaleX(-1);
+}
+
+.recorder-timer {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 10px;
+  color: #fff;
+  background: rgba(217, 45, 32, 0.9);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 650;
 }
