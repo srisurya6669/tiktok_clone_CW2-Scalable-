@@ -39,10 +39,7 @@ function ProfilePage() {
       }
       setVideos((previous) => [
         ...previous,
-        ...data.videos.map((video) => ({
-          ...video,
-          src: `${API_URL}${video.src}`,
-        })),
+        ...data.videos,
       ]);
       setTotal(data.total);
       setHasMore(data.hasMore);

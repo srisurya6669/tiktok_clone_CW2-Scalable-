@@ -37,9 +37,7 @@ function HomePage() {
 
       setVideos((previous) => {
         const known = new Set(previous.map((video) => video.id));
-        const fresh = data.videos
-          .filter((video) => !known.has(video.id))
-          .map((video) => ({ ...video, src: `${API_URL}${video.src}` }));
+        const fresh = data.videos.filter((video) => !known.has(video.id));
         return [...previous, ...fresh];
       });
       setHasMore(data.hasMore);

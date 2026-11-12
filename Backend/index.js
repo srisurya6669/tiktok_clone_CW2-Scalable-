@@ -4,8 +4,6 @@ require('dotenv').config()
 
 const mongoose = require('mongoose')
 
-const path = require('path')
-
 const authRoutes = require('./Routes/userRoutes')
 const videoRoutes = require('./Routes/videoRoutes')
 
@@ -33,7 +31,6 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes)
 app.use('/api/videos', videoRoutes)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });

@@ -1,38 +1,84 @@
-const fs = require("fs");
-const path = require("path");
 const mongoose = require("mongoose");
 const Video = require("../Models/videoModel");
 const Like = require("../Models/likeModel");
 const Comment = require("../Models/commentModel");
+const blobStorage = require("../Services/blobStorage");
 
-const toResponse = (video, liked = false) => ({
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+const ALLOWED_TYPES = {
+  "video/mp4": ".mp4",
+  "video/webm": ".webm",
+  "video/quicktime": ".mov",
+};
+
+// Browser recordings send types like "video/webm;codecs=vp9,opus"; ignore the codec part.
+const baseType = (type = "") => type.split(";")[0];
+
+const toResponse = async (video, liked = false) => ({
   id: video._id,
   title: video.title,
   author: video.user?.name,
   userId: video.user?._id,
-  src: `/uploads/${video.filename}`,
+  src: await blobStorage.readUrl(video.filename),
   likesCount: video.likesCount ?? 0,
   commentsCount: video.commentsCount ?? 0,
   liked,
   createdAt: video.createdAt,
 });
 
+// Step 1: hand the browser a short-lived URL to upload straight to Blob Storage.
+exports.uploadUrl = async (req, res) => {
+  const contentType = baseType(req.body.contentType);
+  const extension = ALLOWED_TYPES[contentType];
+  if (!extension) {
+    return res
+      .status(400)
+      .json({ message: "Only MP4, WebM or MOV videos are allowed" });
+  }
+
+  const blobName = blobStorage.newBlobName(req.user.id, extension);
+  try {
+    const uploadUrl = await blobStorage.uploadUrl(blobName);
+    res.json({ uploadUrl, blobName, contentType });
+  } catch {
+    res.status(500).json({ message: "Could not prepare upload" });
+  }
+};
+
+// Step 2: after the browser finished uploading, verify the blob and save its metadata.
 exports.upload = async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "Video file is required" });
+  const { blobName } = req.body;
+  if (!blobStorage.isOwnBlob(blobName, req.user.id)) {
+    return res.status(400).json({ message: "Invalid upload" });
   }
 
   try {
-    const title = (req.body.title || "").trim() || req.file.originalname;
+    let properties;
+    try {
+      properties = await blobStorage.getProperties(blobName);
+    } catch {
+      return res.status(400).json({ message: "Video file was not uploaded" });
+    }
+
+    if (
+      properties.contentLength > MAX_VIDEO_BYTES ||
+      !ALLOWED_TYPES[baseType(properties.contentType)]
+    ) {
+      await blobStorage.deleteBlob(blobName);
+      return res
+        .status(400)
+        .json({ message: "Video must be an MP4, WebM or MOV of 100MB or less" });
+    }
+
+    const title = (req.body.title || "").trim() || "Untitled";
     const video = await Video.create({
       title,
-      filename: req.file.filename,
+      filename: blobName,
       user: req.user.id,
     });
     await video.populate("user", "name");
-    res.status(201).json({ video: toResponse(video) });
+    res.status(201).json({ video: await toResponse(video) });
   } catch (error) {
-    fs.unlink(req.file.path, () => {});
     res.status(400).json({ message: error.message });
   }
 };
@@ -78,7 +124,9 @@ exports.list = async (req, res) => {
     }
 
     const body = {
-      videos: page.map((video) => toResponse(video, likedIds.has(video._id.toString()))),
+      videos: await Promise.all(
+        page.map((video) => toResponse(video, likedIds.has(video._id.toString())))
+      ),
       hasMore,
     };
     if (req.query.user) {
@@ -110,7 +158,7 @@ exports.remove = async (req, res) => {
       Like.deleteMany({ video: video._id }),
       Comment.deleteMany({ video: video._id }),
     ]);
-    fs.unlink(path.join(__dirname, "..", "uploads", video.filename), () => {});
+    await blobStorage.deleteBlob(video.filename).catch(() => {});
     res.json({ message: "Video deleted" });
   } catch (error) {
     res.status(500).json({ message: "server error" });
