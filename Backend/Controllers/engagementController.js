@@ -2,10 +2,12 @@ const mongoose = require("mongoose");
 const Video = require("../Models/videoModel");
 const Like = require("../Models/likeModel");
 const Comment = require("../Models/commentModel");
+const { analyze } = require("../Services/sentiment");
 
 const commentToResponse = (comment) => ({
   id: comment._id,
   text: comment.text,
+  sentiment: comment.sentiment ?? null,
   author: comment.user?.name,
   userId: comment.user?._id,
   createdAt: comment.createdAt,
@@ -75,6 +77,16 @@ exports.listComments = async (req, res) => {
       filter.createdAt = { $lt: before };
     }
 
+    // Overall mood of all comments on this video, shown above the list.
+    const counts = await Comment.aggregate([
+      { $match: { video: video._id, sentiment: { $exists: true } } },
+      { $group: { _id: "$sentiment", count: { $sum: 1 } } },
+    ]);
+    const sentimentSummary = { positive: 0, neutral: 0, negative: 0, mixed: 0 };
+    counts.forEach(({ _id, count }) => {
+      sentimentSummary[_id] = count;
+    });
+
     const comments = await Comment.find(filter)
       .sort({ createdAt: -1, _id: -1 })
       .limit(limit + 1)
@@ -83,6 +95,7 @@ exports.listComments = async (req, res) => {
     res.json({
       comments: comments.slice(0, limit).map(commentToResponse),
       hasMore: comments.length > limit,
+      sentimentSummary,
     });
   } catch (error) {
     res.status(500).json({ message: "server error" });
@@ -102,10 +115,15 @@ exports.addComment = async (req, res) => {
       return res.status(400).json({ message: "Comment must be 500 characters or fewer" });
     }
 
+    const sentiment = await analyze(text);
     const comment = await Comment.create({
       video: video._id,
       user: req.user.id,
       text,
+      ...(sentiment && {
+        sentiment: sentiment.label,
+        sentimentScores: sentiment.scores,
+      }),
     });
     await Video.findByIdAndUpdate(video._id, { $inc: { commentsCount: 1 } });
     await comment.populate("user", "name");

@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 const API_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+const EMPTY_SUMMARY = { positive: 0, neutral: 0, negative: 0, mixed: 0 };
+
 function CommentsPanel({
   videoId,
   token,
@@ -17,6 +19,7 @@ function CommentsPanel({
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
+  const [summary, setSummary] = useState(EMPTY_SUMMARY);
   const loadedRef = useRef(false);
 
   async function loadComments(before) {
@@ -36,6 +39,7 @@ function CommentsPanel({
 
       setComments((previous) => [...previous, ...data.comments]);
       setHasMore(data.hasMore);
+      setSummary(data.sentimentSummary || EMPTY_SUMMARY);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -76,6 +80,7 @@ function CommentsPanel({
       if (!response.ok) throw new Error(data.message || "Could not post comment");
 
       setComments((previous) => [data.comment, ...previous]);
+      adjustSummary(data.comment.sentiment, 1);
       onCountChange(1);
       setText("");
     } catch (err) {
@@ -85,7 +90,16 @@ function CommentsPanel({
     }
   }
 
+  function adjustSummary(sentiment, change) {
+    if (!sentiment) return;
+    setSummary((previous) => ({
+      ...previous,
+      [sentiment]: Math.max(0, previous[sentiment] + change),
+    }));
+  }
+
   async function handleDelete(commentId) {
+    const deleted = comments.find((comment) => comment.id === commentId);
     try {
       const response = await fetch(
         `${API_URL}/api/videos/${videoId}/comments/${commentId}`,
@@ -102,21 +116,42 @@ function CommentsPanel({
       setComments((previous) =>
         previous.filter((comment) => comment.id !== commentId)
       );
+      adjustSummary(deleted?.sentiment, -1);
       onCountChange(-1);
     } catch (err) {
       setError(err.message);
     }
   }
 
+  const analysed =
+    summary.positive + summary.neutral + summary.negative + summary.mixed;
+
   return (
     <aside className="comments-panel" aria-label="Comments">
       <h3 className="comments-title">Comments ({commentsCount})</h3>
+
+      {analysed > 0 && (
+        <p className="sentiment-summary" aria-label="Comment sentiment">
+          <span className="sentiment-positive">{summary.positive} positive</span>
+          <span className="sentiment-neutral">{summary.neutral} neutral</span>
+          <span className="sentiment-negative">{summary.negative} negative</span>
+        </p>
+      )}
 
       <ul className="comments-list">
         {comments.map((comment) => (
           <li className="comment" key={comment.id}>
             <div className="comment-head">
-              <strong>@{comment.author}</strong>
+              <strong>
+                @{comment.author}
+                {comment.sentiment && (
+                  <span
+                    className={`sentiment-badge sentiment-${comment.sentiment}`}
+                  >
+                    {comment.sentiment}
+                  </span>
+                )}
+              </strong>
               <time dateTime={comment.createdAt}>
                 {new Date(comment.createdAt).toLocaleDateString()}
               </time>
