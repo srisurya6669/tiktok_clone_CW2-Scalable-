@@ -1,0 +1,23 @@
+# Runs the whole app locally: docker compose up --build
+# Frontend: http://localhost:8080   Backend API: http://localhost:3000
+services:
+  backend:
+    build: ./Backend
+    env_file: ./Backend/.env # MongoDB, JWT, Azure Storage and Azure AI keys
+    environment:
+      PORT: 3000
+      CLIENT_ORIGIN: http://localhost:8080
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./Frontend/Frontend
+      args:
+        VITE_API_URL: http://localhost:3000
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
