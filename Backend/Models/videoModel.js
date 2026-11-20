@@ -11,4 +11,8 @@ const videoSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Feed pages (newest first) and a user's own videos on the profile page.
+videoSchema.index({ createdAt: -1, _id: -1 });
+videoSchema.index({ user: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Video", videoSchema);

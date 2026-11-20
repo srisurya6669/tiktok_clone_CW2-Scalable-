@@ -71,11 +71,11 @@ function LoginForm({ onLoginSuccess }) {
     <form className="login-form" onSubmit={handleLogin}>
       <input
         id="email"
-        type="text"
-        placeholder="Email or username"
+        type="email"
+        placeholder="Email"
         value={email}
         onChange={(event) => setEmail(event.target.value)}
-        autoComplete="username"
+        autoComplete="email"
         required
       />
 
