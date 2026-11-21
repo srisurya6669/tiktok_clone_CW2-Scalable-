@@ -34,18 +34,22 @@ docker push scaletokacr123.azurecr.io/scaletok-frontend:v1
 az aks create \
   --resource-group scaletok-rg \
   --name scaletok-aks \
+  --location polandcentral \
   --tier free \
   --node-count 1 \
-  --node-vm-size Standard_B2s \
+  --node-vm-size Standard_B2als_v2 \
   --attach-acr scaletokacr123 \
   --enable-app-routing \
-  --generate-ssh-keys
+  --ssh-access disabled
 
 az aks get-credentials --resource-group scaletok-rg --name scaletok-aks
 kubectl get nodes
 ```
 
-If `Standard_B2s` is not available in your region, try `Standard_B2als_v2` or `Standard_D2s_v3`.
+Azure for Students only allows some regions and VM sizes for AKS. France Central only offered
+v7 sizes with 0 quota, so the cluster runs in Poland Central on `Standard_B2als_v2`
+(the registry stays in France Central). Add `--subscription "Azure for Students"` to `az`
+commands if your default subscription is a different one.
 
 ## 3. Deploy
 
