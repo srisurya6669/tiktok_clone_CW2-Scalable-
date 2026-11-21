@@ -1,0 +1,33 @@
+# Local testing on Docker Desktop Kubernetes: same routing as ../ingress.yaml,
+# but for the open-source ingress-nginx controller instead of the AKS add-on.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: scaletok
+  namespace: scaletok
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 80
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
