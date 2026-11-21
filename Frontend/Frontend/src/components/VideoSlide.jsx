@@ -4,7 +4,7 @@ import VideoPlayer from "./VideoPlayer";
 import { CloseIcon, CommentIcon, HeartIcon } from "./Icons";
 
 const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000";
+  import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 function VideoSlide({ video, user, token }) {
   const [active, setActive] = useState(false);

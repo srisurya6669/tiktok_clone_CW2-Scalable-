@@ -4,7 +4,7 @@ import VideoPlayer from "./VideoPlayer";
 import "./ProfilePage.css";
 
 const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000";
+  import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 const PAGE_SIZE = 12;
 
 function ProfilePage() {

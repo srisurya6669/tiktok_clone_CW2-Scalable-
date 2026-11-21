@@ -7,7 +7,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test",
+    "test": "echo \"No tests yet\"",
     "dev": "nodemon index.js",
     "start": "node index.js"
   },

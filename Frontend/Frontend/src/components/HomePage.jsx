@@ -4,7 +4,7 @@ import { useOutletContext } from "react-router-dom";
 import "./HomePage.css";
 
 const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000";
+  import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 const PAGE_SIZE = 5;
 
 function HomePage() {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000";
+  import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 const EMPTY_SUMMARY = { positive: 0, neutral: 0, negative: 0, mixed: 0 };
 

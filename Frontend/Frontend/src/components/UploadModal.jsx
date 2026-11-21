@@ -2,7 +2,7 @@ import { useState } from "react";
 import CameraRecorder from "./CameraRecorder";
 
 const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000";
+  import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 const MAX_BYTES = 100 * 1024 * 1024;
 

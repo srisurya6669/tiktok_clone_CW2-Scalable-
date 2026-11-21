@@ -12,7 +12,7 @@ import VideoCollage from "./components/VideoCollage";
 import "./App.css";
 
 const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000";
+  import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 const TOKEN_KEY = "scaletok_token";
 
 function readToken() {
