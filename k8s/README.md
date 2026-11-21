@@ -7,6 +7,9 @@
 | `frontend.yaml` | Frontend Deployment (2 pods, nginx) and its Service |
 | `ingress.yaml` | One public address: `/api` and `/health` go to the backend, everything else to the frontend |
 | `hpa.yaml` | Autoscaling: backend 2–6 pods, frontend 2–4 pods, at 70% CPU |
+| `ingress-controller.yaml` | Gives the Ingress public IP the DNS name `scaletok.polandcentral.cloudapp.azure.com` |
+| `cluster-issuer.yaml` | Let's Encrypt issuer for cert-manager (free HTTPS certificate, auto-renewed) |
+| `local/ingress.yaml` | Ingress for local testing on Docker Desktop Kubernetes |
 
 The backend's secrets (MongoDB, JWT, Azure Storage, Azure AI Language) are stored in a
 Kubernetes Secret created from `Backend/.env`, so they never go into git or the images.
@@ -54,11 +57,18 @@ commands if your default subscription is a different one.
 ## 3. Deploy
 
 ```bash
+# cert-manager issues the HTTPS certificate
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
+kubectl wait -n cert-manager --for=condition=Available deployment --all --timeout=240s
+
 kubectl apply -f k8s/namespace.yaml
 kubectl create secret generic scaletok-backend-env \
   --from-env-file=Backend/.env --namespace scaletok
 kubectl apply -f k8s/
+kubectl get certificate -n scaletok   # READY becomes True within a minute or two
 ```
+
+The site is served at **https://scaletok.polandcentral.cloudapp.azure.com** (HTTP redirects to HTTPS).
 
 ## 4. Get the public address
 
@@ -67,14 +77,14 @@ kubectl get ingress -n scaletok      # wait until ADDRESS shows an IP
 kubectl get pods -n scaletok         # all pods should be Running and 1/1 READY
 ```
 
-Open `http://<ADDRESS>` in a browser.
+Open `https://scaletok.polandcentral.cloudapp.azure.com` in a browser.
 
 ## 5. Allow the new address
 
 - **MongoDB Atlas → Network Access:** add the cluster's outbound IP. Find it with
   `kubectl run ip-check --rm -it --restart=Never --image=curlimages/curl -- curl -s ifconfig.me`
-- **Storage account → Resource sharing (CORS) → Blob service:** add `http://<ADDRESS>`
-  to the allowed origins, otherwise uploads fail.
+- **Storage account → Resource sharing (CORS) → Blob service:** add
+  `https://scaletok.polandcentral.cloudapp.azure.com` to the allowed origins, otherwise uploads fail.
 
 ## Updating after a code change
 

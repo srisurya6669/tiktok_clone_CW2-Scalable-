@@ -1,14 +1,22 @@
 # One public address for the whole site: /api and /health go to the backend,
 # everything else to the frontend. Uses the AKS "application routing" add-on (managed nginx).
+# HTTPS: cert-manager gets a Let's Encrypt certificate for the host; HTTP redirects to HTTPS.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: scaletok
   namespace: scaletok
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
 spec:
   ingressClassName: webapprouting.kubernetes.azure.com
+  tls:
+    - hosts:
+        - scaletok.polandcentral.cloudapp.azure.com
+      secretName: scaletok-tls
   rules:
-    - http:
+    - host: scaletok.polandcentral.cloudapp.azure.com
+      http:
         paths:
           - path: /api
             pathType: Prefix
