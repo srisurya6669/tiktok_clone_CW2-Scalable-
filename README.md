@@ -38,6 +38,19 @@ npm run dev               # http://localhost:5173
 
 Health check: `GET /health` returns 200 when the API is up and connected to MongoDB.
 
+## Tests
+
+```bash
+cd Backend && npm test            # 35 API tests (Node test runner + Supertest)
+cd Frontend/Frontend && npm test  # 11 component tests (Vitest + React Testing Library)
+```
+
+The backend tests use an in-memory MongoDB and fake Azure Storage / Azure AI Language
+services, so they need no `.env`, no internet connection and no Azure credit.
+They cover sign-up and login, the upload flow and its checks, pagination, likes,
+comments with sentiment, and permission rules (only owners can delete).
+The frontend tests cover login, the direct-to-Blob upload flow and the comments panel.
+
 ## API overview
 
 All routes except `/health` and `/api/auth/register|login` need `Authorization: Bearer <token>`.
