@@ -28,9 +28,18 @@ jobs:
           docker push scaletokacr123.azurecr.io/scaletok-frontend:${{ github.sha }}
 
       - name: Set up kubeconfig
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
+          if [ -z "$KUBE_CONFIG" ]; then
+            echo "::error::The KUBE_CONFIG secret is empty or missing."; exit 1
+          fi
           mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+          # Strip any stray whitespace or newlines picked up when pasting the secret.
+          if ! printf '%s' "$KUBE_CONFIG" | tr -d '[:space:]' | base64 -d > ~/.kube/config 2>/dev/null \
+             || ! grep -q '^apiVersion:' ~/.kube/config; then
+            echo "::error::KUBE_CONFIG is not a valid base64-encoded kubeconfig. Re-create the secret."; exit 1
+          fi
           chmod 600 ~/.kube/config
 
       - name: Roll out to AKS
