@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { PlusIcon } from "./Icons";
 import UploadModal from "./UploadModal";
@@ -9,6 +9,13 @@ function AppLayout({ user, token, onLogout }) {
   const onProfile = useLocation().pathname === "/profile";
   const [showUpload, setShowUpload] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // The app fills the screen and scrolls inside, so the page itself must not scroll
+  // (on phones that hides the top bar and leaves blank space below).
+  useEffect(() => {
+    document.body.classList.add("app-locked");
+    return () => document.body.classList.remove("app-locked");
+  }, []);
 
   return (
     <main className="app-shell home-shell">
