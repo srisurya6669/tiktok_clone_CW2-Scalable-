@@ -1,11 +1,30 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PlayIcon, VolumeIcon } from "./Icons";
 
 // Shared player: no native controls, click to play/pause, mute button in the
 // top-right corner and a thin progress bar along the bottom. `children` are
 // overlaid on top of the video (title, like button, etc.).
-function VideoPlayer({ src, title, autoPlayInView = false, onActiveChange, children }) {
+// WebVTT timestamp, e.g. 83.5 -> "00:01:23.500".
+function vttTime(seconds) {
+  const ms = Math.round(seconds * 1000);
+  const pad = (value, size = 2) => String(value).padStart(size, "0");
+  return `${pad(Math.floor(ms / 3600000))}:${pad(Math.floor(ms / 60000) % 60)}:${pad(
+    Math.floor(ms / 1000) % 60
+  )}.${pad(ms % 1000, 3)}`;
+}
+
+// Subtitles (from Azure AI Speech) as an inline WebVTT file the <video> can show.
+function subtitleUrl(captions) {
+  if (!captions?.length) return null;
+  const cues = captions
+    .map((cue) => `${vttTime(cue.start)} --> ${vttTime(cue.end)}\n${cue.text}`)
+    .join("\n\n");
+  return `data:text/vtt;charset=utf-8,${encodeURIComponent(`WEBVTT\n\n${cues}\n`)}`;
+}
+
+function VideoPlayer({ src, title, captions, autoPlayInView = false, onActiveChange, children }) {
   const videoRef = useRef(null);
+  const subtitlesSrc = useMemo(() => subtitleUrl(captions), [captions]);
   const [paused, setPaused] = useState(true);
   // Autoplay needs the video muted; click-to-play can start with sound.
   const [muted, setMuted] = useState(autoPlayInView);
@@ -77,7 +96,11 @@ function VideoPlayer({ src, title, autoPlayInView = false, onActiveChange, child
           const { currentTime, duration } = event.target;
           setProgress(duration ? (currentTime / duration) * 100 : 0);
         }}
-      />
+      >
+        {subtitlesSrc && (
+          <track kind="captions" label="Auto subtitles" srcLang="en" src={subtitlesSrc} default />
+        )}
+      </video>
 
       {paused && (
         <div className="play-indicator" aria-hidden="true">

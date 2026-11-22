@@ -24,6 +24,18 @@ const sentiment = {
   analyze: mock.fn(async () => null),
 };
 
+// Fake Azure AI Language extras, Content Safety, Translator and the background video analysis.
+// By default every service returns null, as if it were unavailable.
+const language = {
+  isConfigured: true,
+  detectLanguage: mock.fn(async () => null),
+  keyPhrases: mock.fn(async () => null),
+  redactPii: mock.fn(async () => null),
+};
+const contentSafety = { isConfigured: true, check: mock.fn(async () => null) };
+const translator = { isConfigured: true, translate: mock.fn(async () => null) };
+const videoAnalysis = { analyzeVideo: mock.fn(async () => {}) };
+
 // Put the fakes in Node's module cache so the app loads them instead of the real services.
 function useFake(relativePath, exports) {
   const file = require.resolve(path.join(__dirname, "..", relativePath));
@@ -31,6 +43,12 @@ function useFake(relativePath, exports) {
 }
 useFake("Services/blobStorage", blobStorage);
 useFake("Services/sentiment", sentiment);
+useFake("Services/language", language);
+useFake("Services/contentSafety", contentSafety);
+useFake("Services/translator", translator);
+useFake("Services/videoAnalysis", videoAnalysis);
+
+const fakes = [blobStorage, sentiment, language, contentSafety, translator, videoAnalysis];
 
 const app = require("../app");
 
@@ -49,7 +67,7 @@ async function stopDatabase() {
 async function clearDatabase() {
   const collections = await mongoose.connection.db.collections();
   await Promise.all(collections.map((collection) => collection.deleteMany({})));
-  for (const fake of [...Object.values(blobStorage), ...Object.values(sentiment)]) {
+  for (const fake of fakes.flatMap((service) => Object.values(service))) {
     if (fake?.mock) {
       fake.mock.resetCalls();
       fake.mock.restore();
@@ -78,6 +96,10 @@ module.exports = {
   app,
   blobStorage,
   sentiment,
+  language,
+  contentSafety,
+  translator,
+  videoAnalysis,
   startDatabase,
   stopDatabase,
   clearDatabase,

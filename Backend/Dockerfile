@@ -1,6 +1,9 @@
 FROM node:22-alpine
 WORKDIR /app
 
+# ffmpeg pulls the frame and audio out of uploaded videos for Azure AI Vision and Speech.
+RUN apk add --no-cache ffmpeg
+
 # Install production dependencies first so this layer is cached until package files change.
 COPY package*.json ./
 RUN npm ci --omit=dev

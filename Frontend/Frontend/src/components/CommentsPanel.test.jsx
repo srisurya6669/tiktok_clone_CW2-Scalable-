@@ -97,4 +97,78 @@ describe("CommentsPanel", () => {
     expect(within(mine).getByRole("button", { name: "Delete" })).toBeInTheDocument();
     expect(within(theirs).queryByRole("button", { name: "Delete" })).toBeNull();
   });
+
+  it("shows the moderation message when a comment is blocked", async () => {
+    mockFetch([
+      ["GET", "/comments", () => ({ body: { comments: [], hasMore: false } })],
+      [
+        "POST",
+        "/comments",
+        () => ({ status: 422, body: { message: "Your comment was blocked because it may contain harmful content" } }),
+      ],
+    ]);
+    renderPanel();
+    await screen.findByText(/No comments yet/);
+
+    await userEvent.type(screen.getByPlaceholderText("Add a comment..."), "something awful");
+    await userEvent.click(screen.getByRole("button", { name: "Post" }));
+
+    expect(await screen.findByText(/was blocked/)).toBeInTheDocument();
+    expect(screen.queryByText("something awful", { selector: "p" })).toBeNull();
+  });
+
+  it("shows key phrases, top topics and the hidden-details note", async () => {
+    mockFetch([
+      [
+        "GET",
+        "/comments",
+        () => ({
+          body: {
+            comments: [{ ...comment("c1", "call me on ****", "neutral"), keyPhrases: ["sunny beach"], redacted: true }],
+            hasMore: false,
+            topTopics: [{ phrase: "beach", count: 3 }],
+          },
+        }),
+      ],
+    ]);
+    renderPanel();
+
+    const item = (await screen.findByText("call me on ****")).closest("li");
+    expect(within(item).getByText("sunny beach")).toBeInTheDocument();
+    expect(within(item).getByText("Personal details were hidden")).toBeInTheDocument();
+    expect(screen.getByLabelText("Popular topics")).toHaveTextContent("beach");
+  });
+
+  it("translates a comment into the chosen language and can show the original again", async () => {
+    const fetchMock = mockFetch([
+      ["GET", "/comments", () => ({ body: { comments: [comment("c1", "Quelle belle plage", "positive")], hasMore: false } })],
+      ["POST", "/comments/c1/translate", () => ({ body: { text: "What a beautiful beach", from: "fr", to: "es" } })],
+    ]);
+    renderPanel();
+    const item = (await screen.findByText("Quelle belle plage")).closest("li");
+
+    await userEvent.selectOptions(screen.getByLabelText("Translate to"), "es");
+    await userEvent.click(within(item).getByRole("button", { name: "Translate" }));
+
+    expect(await within(item).findByText("What a beautiful beach")).toBeInTheDocument();
+    const call = fetchMock.mock.calls.find(([url]) => String(url).includes("/translate"));
+    expect(JSON.parse(call[1].body)).toEqual({ to: "es" });
+
+    await userEvent.click(within(item).getByRole("button", { name: "Show original" }));
+    expect(within(item).getByText("Quelle belle plage")).toBeInTheDocument();
+  });
+
+  it("shows an error when translation is unavailable", async () => {
+    mockFetch([
+      ["GET", "/comments", () => ({ body: { comments: [comment("c1", "Hola", null)], hasMore: false } })],
+      ["POST", "/translate", () => ({ status: 503, body: { message: "Translation is unavailable right now" } })],
+    ]);
+    renderPanel();
+    const item = (await screen.findByText("Hola")).closest("li");
+
+    await userEvent.click(within(item).getByRole("button", { name: "Translate" }));
+
+    expect(await screen.findByText("Translation is unavailable right now")).toBeInTheDocument();
+    expect(within(item).getByRole("button", { name: "Translate" })).toBeEnabled();
+  });
 });

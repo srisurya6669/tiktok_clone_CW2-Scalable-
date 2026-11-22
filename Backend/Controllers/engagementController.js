@@ -3,11 +3,17 @@ const Video = require("../Models/videoModel");
 const Like = require("../Models/likeModel");
 const Comment = require("../Models/commentModel");
 const { analyze } = require("../Services/sentiment");
+const language = require("../Services/language");
+const contentSafety = require("../Services/contentSafety");
+const translator = require("../Services/translator");
 
 const commentToResponse = (comment) => ({
   id: comment._id,
   text: comment.text,
   sentiment: comment.sentiment ?? null,
+  language: comment.language ?? null,
+  keyPhrases: comment.keyPhrases ?? [],
+  redacted: comment.redacted ?? false,
   author: comment.user?.name,
   userId: comment.user?._id,
   createdAt: comment.createdAt,
@@ -87,6 +93,15 @@ exports.listComments = async (req, res) => {
       sentimentSummary[_id] = count;
     });
 
+    // Most mentioned topics across all comments on this video.
+    const topics = await Comment.aggregate([
+      { $match: { video: video._id } },
+      { $unwind: "$keyPhrases" },
+      { $group: { _id: { $toLower: "$keyPhrases" }, count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+      { $limit: 5 },
+    ]);
+
     const comments = await Comment.find(filter)
       .sort({ createdAt: -1, _id: -1 })
       .limit(limit + 1)
@@ -96,6 +111,7 @@ exports.listComments = async (req, res) => {
       comments: comments.slice(0, limit).map(commentToResponse),
       hasMore: comments.length > limit,
       sentimentSummary,
+      topTopics: topics.map(({ _id, count }) => ({ phrase: _id, count })),
     });
   } catch (error) {
     res.status(500).json({ message: "server error" });
@@ -115,11 +131,33 @@ exports.addComment = async (req, res) => {
       return res.status(400).json({ message: "Comment must be 500 characters or fewer" });
     }
 
-    const sentiment = await analyze(text);
+    // 1. Moderation: harmful comments are rejected before anything is saved.
+    const safety = await contentSafety.check(text);
+    if (safety?.blocked) {
+      return res.status(422).json({
+        message: "Your comment was blocked because it may contain harmful content",
+        categories: safety.categories,
+      });
+    }
+
+    // 2. Mask personal details so they are never stored or shown.
+    const pii = await language.redactPii(text);
+    const safeText = pii?.text ?? text;
+
+    // 3. Analyse the cleaned text. Each call fails soft, so the comment posts even if one is down.
+    const [sentiment, detectedLanguage, keyPhrases] = await Promise.all([
+      analyze(safeText),
+      language.detectLanguage(safeText),
+      language.keyPhrases(safeText),
+    ]);
+
     const comment = await Comment.create({
       video: video._id,
       user: req.user.id,
-      text,
+      text: safeText,
+      redacted: pii?.redacted ?? false,
+      ...(detectedLanguage && { language: detectedLanguage }),
+      ...(keyPhrases && { keyPhrases }),
       ...(sentiment && {
         sentiment: sentiment.label,
         sentimentScores: sentiment.scores,
@@ -129,6 +167,35 @@ exports.addComment = async (req, res) => {
     await comment.populate("user", "name");
 
     res.status(201).json({ comment: commentToResponse(comment) });
+  } catch (error) {
+    res.status(500).json({ message: "server error" });
+  }
+};
+
+// Translates one comment on demand into the language the viewer asks for.
+exports.translateComment = async (req, res) => {
+  try {
+    const video = await findVideo(req, res);
+    if (!video) return;
+
+    const target = String(req.body.to || "").trim();
+    if (!/^[a-zA-Z]{2,3}(-[a-zA-Z]{2,4})?$/.test(target)) {
+      return res.status(400).json({ message: "Invalid target language" });
+    }
+    if (!mongoose.isValidObjectId(req.params.commentId)) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    const comment = await Comment.findOne({ _id: req.params.commentId, video: video._id });
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    const result = await translator.translate(comment.text, target);
+    if (!result) {
+      return res.status(503).json({ message: "Translation is unavailable right now" });
+    }
+    res.json({ text: result.text, from: result.from ?? comment.language ?? null, to: target });
   } catch (error) {
     res.status(500).json({ message: "server error" });
   }

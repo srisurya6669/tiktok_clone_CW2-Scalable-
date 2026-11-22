@@ -45,12 +45,20 @@ function VideoSlide({ video, user, token }) {
         <VideoPlayer
           src={video.src}
           title={video.title}
+          captions={video.captions}
           autoPlayInView
           onActiveChange={setActive}
         >
           <div className="video-info">
             <h2>{video.title}</h2>
             <p>@{video.author}</p>
+            {video.tags?.length > 0 && (
+              <ul className="video-tags" aria-label="AI-generated tags">
+                {video.tags.map((tag) => (
+                  <li key={tag}>#{tag.replace(/\s+/g, "")}</li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div className="video-actions">

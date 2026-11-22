@@ -5,6 +5,24 @@ const API_URL =
 
 const EMPTY_SUMMARY = { positive: 0, neutral: 0, negative: 0, mixed: 0 };
 
+// Languages offered for translating a comment (Azure AI Translator codes).
+const LANGUAGES = [
+  ["en", "English"],
+  ["es", "Spanish"],
+  ["fr", "French"],
+  ["de", "German"],
+  ["hi", "Hindi"],
+  ["te", "Telugu"],
+  ["ar", "Arabic"],
+  ["zh-Hans", "Chinese"],
+  ["pt", "Portuguese"],
+];
+
+const browserLanguage = () => {
+  const code = (navigator.language || "en").split("-")[0];
+  return LANGUAGES.some(([value]) => value === code) ? code : "en";
+};
+
 function CommentsPanel({
   videoId,
   token,
@@ -20,6 +38,10 @@ function CommentsPanel({
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
   const [summary, setSummary] = useState(EMPTY_SUMMARY);
+  const [topics, setTopics] = useState([]);
+  const [targetLanguage, setTargetLanguage] = useState(browserLanguage);
+  // Translations by comment id: { text, shown } or { loading: true }.
+  const [translations, setTranslations] = useState({});
   const loadedRef = useRef(false);
 
   async function loadComments(before) {
@@ -40,6 +62,7 @@ function CommentsPanel({
       setComments((previous) => [...previous, ...data.comments]);
       setHasMore(data.hasMore);
       setSummary(data.sentimentSummary || EMPTY_SUMMARY);
+      setTopics(data.topTopics || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -123,6 +146,48 @@ function CommentsPanel({
     }
   }
 
+  async function handleTranslate(comment) {
+    const existing = translations[comment.id];
+    if (existing?.text && existing.to === targetLanguage) {
+      // Already translated into this language: just flip between original and translation.
+      setTranslations((previous) => ({
+        ...previous,
+        [comment.id]: { ...existing, shown: !existing.shown },
+      }));
+      return;
+    }
+
+    setTranslations((previous) => ({ ...previous, [comment.id]: { loading: true } }));
+    setError("");
+    try {
+      const response = await fetch(
+        `${API_URL}/api/videos/${videoId}/comments/${comment.id}/translate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ to: targetLanguage }),
+        }
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Could not translate comment");
+
+      setTranslations((previous) => ({
+        ...previous,
+        [comment.id]: { text: data.text, to: targetLanguage, shown: true },
+      }));
+    } catch (err) {
+      setTranslations((previous) => {
+        const rest = { ...previous };
+        delete rest[comment.id];
+        return rest;
+      });
+      setError(err.message);
+    }
+  }
+
   const analysed =
     summary.positive + summary.neutral + summary.negative + summary.mixed;
 
@@ -137,6 +202,29 @@ function CommentsPanel({
           <span className="sentiment-negative">{summary.negative} negative</span>
         </p>
       )}
+
+      {topics.length > 0 && (
+        <p className="comment-topics" aria-label="Popular topics">
+          Topics:{" "}
+          {topics.map((topic) => (
+            <span key={topic.phrase}>{topic.phrase}</span>
+          ))}
+        </p>
+      )}
+
+      <label className="translate-language">
+        Translate to
+        <select
+          value={targetLanguage}
+          onChange={(event) => setTargetLanguage(event.target.value)}
+        >
+          {LANGUAGES.map(([value, name]) => (
+            <option key={value} value={value}>
+              {name}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <ul className="comments-list">
         {comments.map((comment) => (
@@ -156,7 +244,32 @@ function CommentsPanel({
                 {new Date(comment.createdAt).toLocaleDateString()}
               </time>
             </div>
-            <p>{comment.text}</p>
+            <p>
+              {translations[comment.id]?.shown
+                ? translations[comment.id].text
+                : comment.text}
+            </p>
+            {comment.redacted && (
+              <p className="comment-note">Personal details were hidden</p>
+            )}
+            {comment.keyPhrases?.length > 0 && (
+              <ul className="comment-phrases" aria-label="Key phrases">
+                {comment.keyPhrases.map((phrase) => (
+                  <li key={phrase}>{phrase}</li>
+                ))}
+              </ul>
+            )}
+            <button
+              className="comment-translate"
+              onClick={() => handleTranslate(comment)}
+              disabled={translations[comment.id]?.loading}
+            >
+              {translations[comment.id]?.loading
+                ? "Translating..."
+                : translations[comment.id]?.shown
+                  ? "Show original"
+                  : "Translate"}
+            </button>
             {comment.userId === user._id && (
               <button
                 className="comment-delete"

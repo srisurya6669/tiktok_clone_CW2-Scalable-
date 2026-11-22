@@ -708,3 +708,78 @@
   font-size: 13px;
   font-weight: 650;
 }
+
+/* AI features: video tags, comment topics, key phrases and translation */
+.video-tags,
+.comment-phrases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.video-tags li {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.comment-topics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 20px;
+  font-size: 12px;
+  color: #5f6368;
+  border-bottom: 1px solid #e7e8ec;
+}
+
+.comment-topics span,
+.comment-phrases li {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #3c4043;
+  background: #eef0f3;
+}
+
+.translate-language {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  font-size: 12px;
+  color: #5f6368;
+  border-bottom: 1px solid #e7e8ec;
+}
+
+.translate-language select {
+  font-size: 12px;
+}
+
+.comment-note {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-style: italic;
+  color: #8a5a00;
+}
+
+.comment-translate {
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  font-size: 12px;
+  color: #1a73e8;
+  background: none;
+  cursor: pointer;
+}
+
+.comment-translate:disabled {
+  color: #9aa0a6;
+  cursor: default;
+}

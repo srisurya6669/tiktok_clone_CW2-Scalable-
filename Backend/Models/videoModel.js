@@ -7,6 +7,11 @@ const videoSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     likesCount: { type: Number, default: 0 },
     commentsCount: { type: Number, default: 0 },
+    // Filled in the background after upload by Azure AI Vision (tags) and AI Speech (subtitles).
+    aiStatus: { type: String, enum: ["pending", "done", "failed"], default: "pending" },
+    tags: [String],
+    transcript: String,
+    captions: [{ _id: false, start: Number, end: Number, text: String }],
   },
   { timestamps: true }
 );

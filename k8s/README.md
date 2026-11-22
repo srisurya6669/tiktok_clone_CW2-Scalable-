@@ -11,7 +11,7 @@
 | `cluster-issuer.yaml` | Let's Encrypt issuer for cert-manager (free HTTPS certificate, auto-renewed) |
 | `local/ingress.yaml` | Ingress for local testing on Docker Desktop Kubernetes |
 
-The backend's secrets (MongoDB, JWT, Azure Storage, Azure AI Language) are stored in a
+The backend's secrets (MongoDB, JWT, Azure Storage, and the Azure AI keys: Language, Content Safety, Translator, Vision, Speech) are stored in a
 Kubernetes Secret created from `Backend/.env`, so they never go into git or the images.
 
 Run every command from the project root (`~/Documents/Scalable`).

@@ -3,6 +3,7 @@ const Video = require("../Models/videoModel");
 const Like = require("../Models/likeModel");
 const Comment = require("../Models/commentModel");
 const blobStorage = require("../Services/blobStorage");
+const { analyzeVideo } = require("../Services/videoAnalysis");
 
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 const ALLOWED_TYPES = {
@@ -22,6 +23,10 @@ const toResponse = async (video, liked = false) => ({
   src: await blobStorage.readUrl(video.filename),
   likesCount: video.likesCount ?? 0,
   commentsCount: video.commentsCount ?? 0,
+  aiStatus: video.aiStatus ?? "done",
+  tags: video.tags ?? [],
+  transcript: video.transcript ?? null,
+  captions: video.captions ?? [],
   liked,
   createdAt: video.createdAt,
 });
@@ -78,6 +83,9 @@ exports.upload = async (req, res) => {
     });
     await video.populate("user", "name");
     res.status(201).json({ video: await toResponse(video) });
+
+    // Tags and subtitles are generated after responding; they appear in the feed once ready.
+    analyzeVideo(video);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

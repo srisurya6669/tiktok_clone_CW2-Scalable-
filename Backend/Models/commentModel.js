@@ -15,6 +15,11 @@ const commentSchema = new mongoose.Schema(
       neutral: Number,
       negative: Number,
     },
+    // Also from Azure AI Language: detected language and the main topics of the comment.
+    language: String,
+    keyPhrases: [String],
+    // True when personal details (email, phone, card, IP) were masked before saving.
+    redacted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
