@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import VideoPlayer from "./VideoPlayer";
+import DeleteAccountModal from "./DeleteAccountModal";
 import "./ProfilePage.css";
 
 const API_URL =
@@ -14,6 +15,7 @@ function ProfilePage() {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const cursorRef = useRef(null);
   const startedRef = useRef(false);
 
@@ -100,12 +102,20 @@ function ProfilePage() {
           </p>
         </div>
 
-        <button
-          className="signup-button btn-secondary profile-logout"
-          onClick={onLogout}
-        >
-          Log out
-        </button>
+        <div className="profile-actions">
+          <button
+            className="signup-button btn-secondary"
+            onClick={onLogout}
+          >
+            Log out
+          </button>
+          <button
+            className="delete-button delete-account-button"
+            onClick={() => setDeletingAccount(true)}
+          >
+            Delete account
+          </button>
+        </div>
       </div>
 
       <h2 className="profile-heading">My videos</h2>
@@ -150,6 +160,14 @@ function ProfilePage() {
         >
           {loading ? "Loading..." : "Load more"}
         </button>
+      )}
+
+      {deletingAccount && (
+        <DeleteAccountModal
+          token={token}
+          onClose={() => setDeletingAccount(false)}
+          onDeleted={onLogout}
+        />
       )}
     </section>
   );

@@ -531,6 +531,9 @@
     display: none;
     position: absolute;
     inset: 20% 0 0;
+    /* The desktop rule sets height: 100%, which would win over "bottom: 0" and push the
+       comment box below the screen. */
+    height: auto;
     z-index: 5;
     border-radius: 16px 16px 0 0;
     border-left: 0;
@@ -538,6 +541,22 @@
 
   .comments-wrap.open {
     display: block;
+  }
+
+  /* 16px stops iOS Safari zooming the page in when the box is focused. */
+  .comment-form input {
+    font-size: 16px;
+  }
+
+  /* Keep the AI rows (topics, translate language) compact so the list has room. */
+  .comment-topics,
+  .translate-language {
+    padding: 6px 20px;
+  }
+
+  .comments-title {
+    padding-top: 14px;
+    padding-bottom: 14px;
   }
 }
 
@@ -782,4 +801,20 @@
 .comment-translate:disabled {
   color: #9aa0a6;
   cursor: default;
+}
+
+/* Delete account dialog */
+.delete-warning {
+  margin: 0 0 16px;
+  color: #5f6368;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.login-button.danger-button {
+  background: #d92d20;
+}
+
+.login-button.danger-button:hover:not(:disabled) {
+  background: #b42318;
 }

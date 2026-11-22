@@ -21,8 +21,15 @@
   border-radius: 18px;
 }
 
-.profile-logout {
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-left: auto;
+}
+
+.delete-account-button {
+  height: 40px;
 }
 
 .profile-avatar {
@@ -157,7 +164,9 @@
     text-align: center;
   }
 
-  .profile-logout {
+  .profile-actions {
+    flex-wrap: wrap;
+    justify-content: center;
     margin-left: 0;
   }
 }

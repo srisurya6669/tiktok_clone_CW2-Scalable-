@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../Models/userModel")
+const { deleteAccount } = require("../Services/accountDeletion");
 
 const signToken = (userId) => {
     return jwt.sign({ sub: userId }, process.env.JWT_SECRET, {
@@ -43,6 +44,30 @@ exports.me = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
         res.json({ user });
+    } catch (error) {
+        res.status(500).json({ message: "server error" });
+    }
+}
+
+// Permanently deletes the signed-in user's account and all of its data. The password must be
+// sent again so a stolen or left-open session cannot wipe the account.
+exports.deleteMe = async (req, res) => {
+    try {
+        const password = req.body?.password;
+        if (typeof password !== "string" || !password) {
+            return res.status(400).json({ message: "Password is required to delete your account" });
+        }
+
+        const user = await User.findById(req.user.id).select("+password");
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        if (!(await user.comparePassword(password))) {
+            return res.status(401).json({ message: "Incorrect password" });
+        }
+
+        const deleted = await deleteAccount(user._id);
+        res.json({ message: "Account deleted", deleted });
     } catch (error) {
         res.status(500).json({ message: "server error" });
     }
