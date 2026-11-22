@@ -1,0 +1,41 @@
+# On every push to main: run the tests, build and push the Docker images to ACR, then roll out to AKS.
+name: Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: scaletokacr123.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push images
+        run: |
+          docker build -t scaletokacr123.azurecr.io/scaletok-backend:${{ github.sha }} Backend
+          docker build -t scaletokacr123.azurecr.io/scaletok-frontend:${{ github.sha }} Frontend/Frontend
+          docker push scaletokacr123.azurecr.io/scaletok-backend:${{ github.sha }}
+          docker push scaletokacr123.azurecr.io/scaletok-frontend:${{ github.sha }}
+
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Roll out to AKS
+        run: |
+          kubectl -n scaletok set image deploy/backend backend=scaletokacr123.azurecr.io/scaletok-backend:${{ github.sha }}
+          kubectl -n scaletok set image deploy/frontend frontend=scaletokacr123.azurecr.io/scaletok-frontend:${{ github.sha }}
+          kubectl -n scaletok rollout status deploy/backend --timeout=300s
+          kubectl -n scaletok rollout status deploy/frontend --timeout=300s
