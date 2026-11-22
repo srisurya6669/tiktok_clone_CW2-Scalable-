@@ -23,7 +23,8 @@ jobs:
       - name: Build and push images
         run: |
           docker build -t scaletokacr123.azurecr.io/scaletok-backend:${{ github.sha }} Backend
-          docker build -t scaletokacr123.azurecr.io/scaletok-frontend:${{ github.sha }} Frontend/Frontend
+          # Empty VITE_API_URL: the site calls the API on its own address (through the Ingress).
+          docker build --build-arg VITE_API_URL= -t scaletokacr123.azurecr.io/scaletok-frontend:${{ github.sha }} Frontend/Frontend
           docker push scaletokacr123.azurecr.io/scaletok-backend:${{ github.sha }}
           docker push scaletokacr123.azurecr.io/scaletok-frontend:${{ github.sha }}
 
