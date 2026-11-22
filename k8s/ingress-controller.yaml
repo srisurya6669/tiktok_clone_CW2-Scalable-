@@ -7,5 +7,9 @@ metadata:
 spec:
   controllerNamePrefix: nginx
   ingressClassName: webapprouting.kubernetes.azure.com
+  # Single node: the default 2 replicas reserve 1 CPU of the node, leaving no room for the app.
+  scaling:
+    minReplicas: 1
+    maxReplicas: 2
   loadBalancerAnnotations:
     service.beta.kubernetes.io/azure-dns-label-name: scaletok
